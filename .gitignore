@@ -1,0 +1,13 @@
+# Work order PDFs
+*.pdf
+
+# Google auth files - never put these on GitHub
+credentials.json
+token.json
+
+# Python cache
+__pycache__/
+*.pyc 
+
+# CSV output files
+*.csv
