@@ -36,7 +36,7 @@ def get_service():
     Every run after that uses the saved token automatically — no browser needed.    
     """
     creds = None
-
+   
     # token.json stores your login after the first run
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
@@ -76,11 +76,11 @@ def ensure_headers(service):
     """
     Checks if the Master sheet has headers yet.
     If the sheet is empty, writes the header row.
-    Same for Flagged_Operations and Duplicates sheets
+    Same for Flagged and Duplicates sheets
     """
     sheets = {
         'Master': MASTER_HEADERS,
-        'Flagged_Operations': FLAGGED_HEADERS,
+        'Flagged': FLAGGED_HEADERS,
         'Duplicates': DUPLICATE_HEADERS,
     }
 
@@ -134,7 +134,7 @@ def write_to_sheets(master_rows, flagged_rows):
     2. Ensure headers exist
     3. Check for duplicates
     4. Write new rows to master
-    5. Write flagged ops to Flagged_Operations
+    5. Write flagged ops to Flagged
     6. Write skipped duplicates to Duplicates
     """
     print("Connecting to Google Sheets...")
@@ -169,8 +169,8 @@ def write_to_sheets(master_rows, flagged_rows):
 
     # Write flagged operations
     if flagged_rows:
-        append_rows(service, 'Flagged_Operations', FLAGGED_HEADERS, flagged_rows)
-        print(f"  ✓ {len(flagged_rows)} flagged operation(s) written to Flagged_Operations sheet")
+        append_rows(service, 'Flagged', FLAGGED_HEADERS, flagged_rows)
+        print(f"  ✓ {len(flagged_rows)} flagged operation(s) written to Flagged sheet")
 
     # Write duplicates log
     if duplicate_rows:
