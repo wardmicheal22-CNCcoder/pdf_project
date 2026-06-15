@@ -3,7 +3,7 @@
 # This maps the operation names coming out of parser.py
 # to the column names we want in Excel.
 # Parser gives us 'PROWATERJE', 'CNCMILL', 'CNCLATHE'
-# Excel eants 'WJ, 'Mill', 'Lathe'
+# Excel wants 'WJ, 'Mill', 'Lathe'
 COLUMN_MAP = {
     'PROWATERJE': 'WJ',
     'CNCLATHE':   'Lathe',
@@ -18,18 +18,18 @@ def normalize(parsed_page):
 
     # Step 1 - Start with a blank row using your exact Excel column order.
     # Every machine gets two columns: End_Date and Time.
-    # We default everything to 'N/A' so that WOs with no
-    # lathe operation still produce a clean row instead of an error.
+    # We default everything to '' so that WOs with no
+    # operation still produce a clean row instead of an error.
     row = {
         'Customer':      parsed_page['Customer'],
         'WO_Number':     parsed_page['WO_Number'],
         'Description':   parsed_page['Description'],
-        'WJ_End_Date':   'N/A',
-        'WJ_Time':       'N/A',
-        'Lathe_End_Date':'N/A',
-        'Lathe_Time':    'N/A',
-        'Mill_End_Date': 'N/A',
-        'Mill_Time':     'N/A',
+        'WJ_Time':       '',
+        'WJ_End_Date':   '',
+        'Lathe_Time':    '',
+        'Lathe_End_Date':'',
+        'Mill_Time':     '',
+        'Mill_End_Date': '',
         'Finish_Date':   parsed_page['Finish_Date'],
     }
 

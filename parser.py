@@ -45,10 +45,10 @@ def parse_page(page_text, page_number):
     """
     result = {
         'page_number': page_number,
-        'WO_Number': 'N/A',
-        'Customer': 'N/A',
-        'Finish_Date': 'N/A',
-        'Description': 'N/A',
+        'WO_Number': '',
+        'Customer': '',
+        'Finish_Date': '',
+        'Description': '',
         'known_ops': [],      # list of dicts for PROWATERJE, CNCMILL, LATHE
         'flagged_ops': [],    # list of dicts for anything else
     }
@@ -127,17 +127,17 @@ def parse_pdf(pdf_path):
                         continue
 
                     # ── WO header page ────────────────────────────────────
-                    if "Job Number:" in text or "Customer:" in text:
+                    if "Job Number:" in text and "Customer:" in text:
                         current_wo = parse_page(text, page_number)
                         parsed_pages.append(current_wo)
                         print(f"  Page {page_number}: {current_wo['WO_Number']} - {current_wo['Customer']}") 
                         
-                    # ── Continuation page ── check for routing operations ───────────────────
-                    elif current_wo is not None and "Routing" in text or "Step no" in text:
-                        print(f"  Page {page_number}: continuation page of {current_wo['WO_Number']} - scanning for operations")
+                    # ── Every other page --- scan for operations ───────────────────
+                    elif current_wo is not None:
+                        print(f"  Page {page_number}: scanning for operations ({current_wo['WO_Number']})")
 
                         # Parse operations from this page and add to surrent WO
-                        for line in text.split('\n'):
+                        for line in text.split('\n'): 
                             match = operation_pattern.search(line)
                             if match:
                                 op_name = match.group(1)
@@ -158,7 +158,7 @@ def parse_pdf(pdf_path):
                                     })
 
                     else:
-                        print(f"   Page {page_number}: skipped - not a WO header page")
+                        print(f"  Page {page_number}: skipped - no WO context yet")
 
                 except Exception as e:
                     parse_errors.append({
