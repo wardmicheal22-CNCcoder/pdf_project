@@ -8,6 +8,7 @@ from parser import parse_pdf
 from normalizer import normalize_all
 from sheets_writer import write_to_sheets
 
+os.environ['TKINTER_NATIVE_FILE_DIALOG'] = '0'
 
 class App:
     def __init__(self, root):
@@ -31,7 +32,7 @@ class App:
             frame,
             text="Select PDF Files",
             width=20,
-            command=self.select_files,
+            command=self.select_file,
         )
         self.select_btn.grid(row=1, column=0, pady=(0, 10))
 
@@ -64,22 +65,27 @@ class App:
         )
         self.log.grid(row=4, column=0, columnspan=2)
 
-        # Store selected file paths
-        self.pdf_paths = None
+        # Store selected file path
+        self.pdf_path = None
 
-    def select_files(self):
+    def select_file(self):
         """Open a file picker dialog filtered to PDF files"""
-        paths = filedialog.askopenfilenames(
+        path = filedialog.askopenfilenames(
             title="Select Work Order PDF",
             filetypes=[("PDF Files", "*.pdf")]
         )
-        if paths:
-            self.pdf_paths = paths
+        # Handle both string and tuple returns
+        if isinstance(path, tuple):
+            path = path[0] if path else None
+
+        if path:
+            self.pdf_path = path
             self.file_label.config(
-            text=os.paths.basename(paths),
-            fg="black")
+                text=os.path.basename(path),
+                fg="black"
+            )
             self.run_btn.config(state="normal")
-            self.log_message(f"Selected: {os.paths.basename(paths)}\n")
+            self.log_message(f"Selected: {os.path.basename(path)}\n")
 
     def log_message(self, message):
         """Write a message to the log window"""
@@ -107,8 +113,8 @@ class App:
         """The full extraction pipeline - runs in background thread."""
         try:
             # Step 1 - Parse
-            self.log_message(f"Opening {os.paths.basename(self.pdf_paths[0])}...\n")
-            parsed, errors = parse_pdf(self.pdf_paths)
+            self.log_message(f"Opening {os.path.basename(self.pdf_path[0])}...\n")
+            parsed, errors = parse_pdf(self.pdf_path)
 
             self.log_message(f"Found {len(parsed)} WO header page(s).\n")
 
@@ -157,8 +163,8 @@ class PrintRedirector:
             def flush(self):
                 pass
 
-if __name__ == "__main__":
-     root = tk.Tk()
-     app = App(root)
-     root.mainloop()
+if __name__ == "__main__": 
+    root = tk.Tk()
+    app = App(root)
+    root.mainloop()
           

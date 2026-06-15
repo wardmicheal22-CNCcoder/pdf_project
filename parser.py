@@ -11,6 +11,7 @@ OPERATION_MAP = {
     'CNCMILLPRO': 'CNCMILL',
     'CNCLATHE': 'CNCLATHE',
     'CNCLATHEPR': 'CNCLATHE',
+    'CNCLATHELG': 'CNCLATHE',
 }
 
 # --- Regex --------------------------------------------------------------
@@ -111,6 +112,8 @@ def parse_pdf(pdf_path):
             total_pages = len(pdf.pages)
             print(f"Found {total_pages} page(s) to process.")
 
+            current_wo = None # track the last seen WO header
+
             for i, page in enumerate(pdf.pages):
                 page_number = i + 1
                 try:
@@ -123,14 +126,39 @@ def parse_pdf(pdf_path):
                         })
                         continue
 
-                    # Skip configuration pages - only process WO header pages
-                    if "Job Number:" not in text or "Customer:" not in text:
-                        print(f"  Page {page_number}: Skipped - not a WO header page") 
-                        continue
+                    # ── WO header page ────────────────────────────────────
+                    if "Job Number:" in text or "Customer:" in text:
+                        current_wo = parse_page(text, page_number)
+                        parsed_pages.append(current_wo)
+                        print(f"  Page {page_number}: {current_wo['WO_Number']} - {current_wo['Customer']}") 
+                        
+                    # ── Continuation page ── check for routing operations ───────────────────
+                    elif current_wo is not None and "Routing" in text or "Step no" in text:
+                        print(f"  Page {page_number}: continuation page of {current_wo['WO_Number']} - scanning for operations")
 
-                    result = parse_page(text, page_number)
-                    parsed_pages.append(result)
-                    print(f"  Page {page_number}: {result['WO_Number']} - {result['Customer']}")
+                        # Parse operations from this page and add to surrent WO
+                        for line in text.split('\n'):
+                            match = operation_pattern.search(line)
+                            if match:
+                                op_name = match.group(1)
+                                op_time = float(match.group(3))
+                                op_end_date = match.group(4)
+
+                                if op_name in KNOWN_OPERATIONS:
+                                    current_wo['known_ops'].append({
+                                        'Operation': OPERATION_MAP[op_name], # normalized name
+                                        'Time': op_time,
+                                        'End_Date': op_end_date
+                                    })
+                                else:
+                                    current_wo['flagged_ops'].append({
+                                        'Operation': op_name, # raw name so you know exactly what was in the PDF
+                                        'Time': op_time,
+                                        'End_Date': op_end_date
+                                    })
+
+                    else:
+                        print(f"   Page {page_number}: skipped - not a WO header page")
 
                 except Exception as e:
                     parse_errors.append({
